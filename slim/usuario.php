@@ -11,6 +11,7 @@ $app = new \Slim\App(array(
 function Conexao(){
    return  new \PDO('mysql:host=jlg7sfncbhyvga14.cbetxkdyhwsb.us-east-1.rds.amazonaws.com;dbname=h9w81k8dpa80jk2o', 'werqx8ism2m6wgx2', 'u9alw9axiniilu2q');
 }
+
 // rotas
 $app->get('/usuario/', function (Request $request, Response $response) {
    	$banco = Conexao();//Conexão
@@ -46,26 +47,28 @@ function lista($banco){ // lista todos os usuarios
 }
 
 function listaUnico($banco,$id){ // lista usuário por id
-	global $app;
-  $sth=$banco->prepare("SELECT * FROM usuario WHERE id_usuario=:id");
-  $sth->bindValue(':id',$id);
-	$sth->execute();
-	$result = $sth->fetch(\PDO::FETCH_ASSOC);
+    global $app;
+    $sth=$banco->prepare("SELECT * FROM usuario WHERE id_usuario=:id");
+    $sth->bindValue(':id',$id);
+    $sth->execute();
+    $result = $sth->fetch(\PDO::FETCH_ASSOC);
     echo json_encode($result);
 }
 
 function novo( $dados){ // isercao de novo usuario
 	global $app;
-  $banco = Conexao();
+    $banco = Conexao();
 	$dados = (sizeof($dados)==0)? $_POST : $dados;
 	$keys = array_keys($dados); //Paga as chaves do array
 	$sth = $banco->prepare("INSERT INTO usuario (".implode(',', $keys).") VALUES (:".implode(",:", $keys).")");
+    
 	foreach ($dados as $key => $value) {
 		$sth ->bindValue(':'.$key,$value);
 	}
+    
 	$sth->execute();
 	//Retorna o id inserido
-  echo json_encode( $banco->lastInsertId());
+    echo json_encode( $banco->lastInsertId());
 
 }
 
