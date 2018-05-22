@@ -34,7 +34,9 @@ $app->get('/usuario/{id}', function (Request $request, Response $response) {
 
 //nova pessoa
 $app->post('/usuario/', function (Request $request, Response $response) {
+    print_r($request->getBody());
     $dados = json_decode($request->getBody());
+    print_r($dados);
 	novo($dados);
 });
 
@@ -55,9 +57,10 @@ function listaUnico($banco,$id){ // lista usuário por id
     echo json_encode($result);
 }
 
-function novo( $dados){ // isercao de novo usuario
+function novo($dados){ // isercao de novo usuario
 	global $app;
     $banco = Conexao();
+    $dados = get_object_vars($dados);
 	$dados = (sizeof($dados)==0)? $_POST : $dados;
 	$keys = array_keys($dados); //Paga as chaves do array
 	$sth = $banco->prepare("INSERT INTO usuario (".implode(',', $keys).") VALUES (:".implode(",:", $keys).")");
