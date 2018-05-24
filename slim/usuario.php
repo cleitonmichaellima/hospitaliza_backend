@@ -32,11 +32,18 @@ $app->get('/usuario/{id}', function (Request $request, Response $response) {
    // return $response;
 });
 
+$app->get('/login/', function (Request $request, Response $response) {
+
+   $banco = Conexao();
+   $dados = json_decode($request->getAttribute('login'));
+   print_r($dados);
+   authUser($dados);
+});
+
+
 //nova pessoa
-$app->post('/usuario/', function (Request $request, Response $response) {
-    print_r($request->getBody());
-    $dados = json_decode($request->getBody());
-    print_r($dados);
+$app->post('/usuario/', function (Request $request, Response $response) {    
+    $dados = json_decode($request->getBody());   
 	novo($dados);
 });
 
@@ -75,6 +82,18 @@ function novo($dados){ // isercao de novo usuario
 
 }
 
+function authUser($dados){
+    global $app;   
+	$dados = (sizeof($dados)==0)? $_POST : $dados;	
+    $banco = Conexao();    
+    $sth=$banco->prepare("SELECT * FROM usuario WHERE email=:email AND senha=:senha");
+    $sth->bindValue(':id',$dados['email']);
+    $sth->bindValue(':senha',$dados['senha']);
+    $result = $sth->fetch(\PDO::FETCH_ASSOC);
+    echo json_encode($result);
+    $sth->execute();
+    
+}
 /*
 function alterar($dados){
 			global $app;
