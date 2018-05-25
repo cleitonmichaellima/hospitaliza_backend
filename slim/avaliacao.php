@@ -114,7 +114,7 @@ function novo( $dados){
     }
     
     $sth->execute();
-    echo json_encode( $banco->lastInsertId());
+    echo json_encode($banco->lastInsertId());
 
 }
 

@@ -19,10 +19,10 @@ $app->get('/usuario/', function (Request $request, Response $response) {
 
 });
 
-$app->get('/usuario/{id}', function (Request $request, Response $response) {
+$app->get('/usuario/{id_usuario}', function (Request $request, Response $response) {
 
    $banco = Conexao();
-   $id = $request->getAttribute('id');
+   $id = $request->getAttribute('id_usuario');
    if($id){
     listaUnico($banco,$id);
    }
@@ -43,10 +43,18 @@ $app->get('/login/', function (Request $request, Response $response) {
 
 //nova pessoa
 $app->post('/usuario/', function (Request $request, Response $response) {    
-    $dados = json_decode($request->getBody());   
-	novo($dados);
+    $dados = json_decode($request->getBody());
+    print_r($dados);
+    if($dados->id_usuario!=''){
+       atualizaUser($dados);
+    }
+    else{
+        novo($dados);
+    }
+	
 });
 
+          
 function lista($banco){ // lista todos os usuarios
 	global $app;
     $sth=$banco->prepare("SELECT * FROM usuario");
@@ -91,6 +99,17 @@ function authUser($dados){
     $sth->bindValue(':senha',$dados['senha']);
     $result = $sth->fetch(\PDO::FETCH_ASSOC);
     echo json_encode($result);
+    $sth->execute();
+    
+}
+
+function atualizaUser($dados){
+    global $app;   
+	$dados = (sizeof($dados)==0)? $_POST : $dados;	
+    $banco = Conexao();    
+    $sth=$banco->prepare("UPDATE usuario SET nome=:nome WHERE id_usuario=:id_usuario");
+    $sth->bindValue(':nome',$dados->nome);
+    $sth->bindValue(':id_usuario',$dados->id_usuario);    
     $sth->execute();
     
 }
