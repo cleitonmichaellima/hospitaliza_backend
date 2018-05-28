@@ -30,6 +30,21 @@ $app->get('/instituicao/{id}', function (Request $request, Response $response) {
    // return $response;
 });
 
+$app->get('/avaliacaoInstituicao/{id}', function (Request $request, Response $response) {
+
+   $banco = Conexao();
+   $id = $request->getAttribute('id');
+   if($id){
+    listaAvaliacoesInstituicao($banco,$id);
+   }
+   else{
+       echo "Codigo de instituicao não especificado";
+   }
+   // return $response;
+});
+
+
+
 $app->get('/buscaTermoInstituicao/{termo}', function (Request $request, Response $response) { // utilizado no campo buscar de instituicao
 
    $banco = Conexao();
@@ -94,6 +109,14 @@ function pesquisaPorTermoDeBusca($banco,$termo){
 }
 
 
+function listaAvaliacoesInstituicao($banco,$id){
+  global $app;
+  $sth=$banco->prepare("SELECT * FROM avaliacao WHERE id_instituicao=:id");
+  $sth->bindValue(':id',$id);
+  $sth->execute();
+  $result = $sth->fetchAll(\PDO::FETCH_ASSOC);
+  echo json_encode($result);
+}
  /*
 function alterar($dados){
 			global $app;
