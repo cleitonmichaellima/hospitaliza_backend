@@ -38,7 +38,7 @@ $app->get('/usuarioVerificaEmail/{email}', function (Request $request, Response 
    $banco = Conexao();
    $email = $request->getAttribute('email');
    if($email){
-    pesquisaSeEmailExiste($banco,$id);
+    pesquisaSeEmailExiste($banco,$email);
    }
    else{
        echo "Usuário não encontrado";
@@ -86,12 +86,13 @@ function listaUnico($banco,$id){ // lista usuário por id
     echo json_encode($result);
 }
 
-function pesquisaSeEmailExiste($banco,$email){ // lista usuário por id
+function pesquisaSeEmailExiste($banco,$email){ // lista usuário por id   
     global $app;
     $sth=$banco->prepare("SELECT email FROM usuario WHERE email=:email");
     $sth->bindValue(':email',$email);
     $sth->execute();
-    $result = $sth->fetch(\PDO::FETCH_ASSOC);
+    $result['email'] = $sth->fetch(\PDO::FETCH_ASSOC);
+    
     echo json_encode($result);
 }
 
