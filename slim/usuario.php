@@ -32,6 +32,20 @@ $app->get('/usuario/{id_usuario}', function (Request $request, Response $respons
    // return $response;
 });
 
+
+$app->get('/usuarioVerificaEmail/{email}', function (Request $request, Response $response) {
+
+   $banco = Conexao();
+   $email = $request->getAttribute('email');
+   if($email){
+    pesquisaSeEmailExiste($banco,$id);
+   }
+   else{
+       echo "Usuário não encontrado";
+   }
+   // return $response;
+});
+
 $app->get('/login/', function (Request $request, Response $response) {
 
    $banco = Conexao();
@@ -67,6 +81,15 @@ function listaUnico($banco,$id){ // lista usuário por id
     global $app;
     $sth=$banco->prepare("SELECT * FROM usuario WHERE id_usuario=:id");
     $sth->bindValue(':id',$id);
+    $sth->execute();
+    $result = $sth->fetch(\PDO::FETCH_ASSOC);
+    echo json_encode($result);
+}
+
+function pesquisaSeEmailExiste($banco,$email){ // lista usuário por id
+    global $app;
+    $sth=$banco->prepare("SELECT email FROM usuario WHERE email=:email");
+    $sth->bindValue(':email',$email);
     $sth->execute();
     $result = $sth->fetch(\PDO::FETCH_ASSOC);
     echo json_encode($result);
