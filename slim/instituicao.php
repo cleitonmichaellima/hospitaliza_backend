@@ -49,8 +49,9 @@ $app->get('/buscaTermoInstituicao/{termo}', function (Request $request, Response
 
    $banco = Conexao();
    $termo = $request->getAttribute('termo');
-   if($termo){
-    pesquisaPorTermoDeBusca($banco,$termo);
+    
+   if($termo){      
+       pesquisaPorTermoDeBusca($banco,$termo);
    }
    else{
        echo "Termo de utilizado invalido";
@@ -101,10 +102,19 @@ function listaUnico($banco,$id){
 
 function pesquisaPorTermoDeBusca($banco,$termo){
   global $app;
-  $sth=$banco->prepare("SELECT * FROM instituicao WHERE nome LIKE '%:termo%'");
+  $sth = $banco->prepare("  SELECT * FROM avaliacao a
+                            INNER JOIN instituicao i ON i.id_instituicao = a.id_instituicao
+                            WHERE
+                              a.descricao LIKE '%:termo%' 
+                            OR
+                              a.titulo LIKE '%:termo%'
+                            OR
+                              i.nome LIKE '%:termo%'
+                        ");
   $sth->bindValue(':termo',$termo);
   $sth->execute();
   $result = $sth->fetchAll(\PDO::FETCH_ASSOC);
+  //$sth->debugDumpParams();
   echo json_encode($result);
 }
 
