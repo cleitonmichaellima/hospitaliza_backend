@@ -30,6 +30,20 @@ $app->get('/instituicao/{id}', function (Request $request, Response $response) {
    // return $response;
 });
 
+$app->get('/variaveisInstituicao/{id}', function (Request $request, Response $response) {
+
+   $banco = Conexao();
+   $id = $request->getAttribute('id');
+   if($id){
+    listaVariaveisInstituicao($banco,$id);
+   }
+   else{
+       echo "Codigo de instituicao não especificado";
+   }
+   // return $response;
+});
+
+
 $app->get('/avaliacaoInstituicao/{id}', function (Request $request, Response $response) {
 
    $banco = Conexao();
@@ -101,19 +115,23 @@ function listaUnico($banco,$id){
 }
 
 function pesquisaPorTermoDeBusca($banco,$termo){
-  global $app;
-  $sth = $banco->prepare("  SELECT * FROM avaliacao a
+  global $app;  
+  $sth = $banco->prepare("  SELECT a.id_avaliacao,a.titulo,a.descricao,n.nota,a.`data`,i.nome,i.id_instituicao 
+                            FROM avaliacao a
                             INNER JOIN instituicao i ON i.id_instituicao = a.id_instituicao
+                            INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao
                             WHERE
-                              a.descricao LIKE '%:termo%' 
+                              a.descricao LIKE :termo 
                             OR
-                              a.titulo LIKE '%:termo%'
+                              a.titulo LIKE :termo 
                             OR
-                              i.nome LIKE '%:termo%'
+                              i.nome LIKE :termo 
                         ");
-  $sth->bindValue(':termo',$termo);
+   
+  $sth->bindValue(':termo', '%'.$termo.'%');
   $sth->execute();
   $result = $sth->fetchAll(\PDO::FETCH_ASSOC);
+   // print_r($result);
   //$sth->debugDumpParams();
   echo json_encode($result);
 }
@@ -127,6 +145,46 @@ function listaAvaliacoesInstituicao($banco,$id){
   $result = $sth->fetchAll(\PDO::FETCH_ASSOC);
   echo json_encode($result);
 }
+
+
+function listaVariaveisInstituicao($banco,$id){
+  global $app;
+  $sth=$banco->prepare("SELECT 
+                            count(*) as totalAvaliacao, round(sum(n.nota)/count(*)) as mediaNota, (SELECT count(*)
+                            FROM instituicao i
+                            INNER JOIN avaliacao a ON a.id_instituicao = i.id_instituicao
+                            INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao
+                            WHERE
+                            i.id_instituicao = :id
+                            and 
+                            n.nota>=3) totalPositiva,
+                            (SELECT count(*)
+                            FROM instituicao i
+                            INNER JOIN avaliacao a ON a.id_instituicao = i.id_instituicao
+                            INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao
+                            WHERE
+                            i.id_instituicao = :id
+                            and 
+                            n.nota<3) totalNegativa,
+                            (SELECT count(*)
+                            FROM instituicao i
+                            INNER JOIN avaliacao a ON a.id_instituicao = i.id_instituicao
+                            INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao
+                            WHERE
+                            i.id_instituicao = :id
+                            and 
+                            a.indicacao=1) totalIndicam
+                            FROM instituicao i
+                            INNER JOIN avaliacao a ON a.id_instituicao = i.id_instituicao
+                            INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao
+                            WHERE
+                            i.id_instituicao = :id");
+  $sth->bindValue(':id',$id);
+  $sth->execute();
+  $result = $sth->fetch(\PDO::FETCH_ASSOC);
+  echo json_encode($result);
+}
+
  /*
 function alterar($dados){
 			global $app;
