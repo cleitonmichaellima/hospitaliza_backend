@@ -35,6 +35,20 @@ $app->get('/usuario/{id_usuario}', function (Request $request, Response $respons
 });
 
 
+$app->get('/avaliacaoUsuario/{id_usuario}', function (Request $request, Response $response) {
+
+   $banco = Conexao();
+   $id = $request->getAttribute('id_usuario');
+   if($id){
+    listaAvaliacoesUsuario($banco,$id);
+   }
+   else{
+       echo "Usuário não encontrado";
+   }
+   // return $response;
+});
+
+
 $app->get('/usuarioVerificaEmail/{email}', function (Request $request, Response $response) {
 
    $banco = Conexao();
@@ -69,7 +83,22 @@ $app->post('/usuario/', function (Request $request, Response $response) {
 	
 });
 
-          
+
+function listaAvaliacoesUsuario($banco,$id){
+  global $app;
+  $sth=$banco->prepare(
+                            "SELECT a.id_avaliacao,a.titulo,a.descricao,n.nota,a.`data`,i.nome,i.id_instituicao 
+                            FROM avaliacao a
+                            INNER JOIN instituicao i ON i.id_instituicao = a.id_instituicao
+                            INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao
+                            WHERE id_usuario=:id"
+                      );
+  $sth->bindValue(':id',$id);
+  $sth->execute();
+  $result = $sth->fetchAll(\PDO::FETCH_ASSOC);
+  echo json_encode($result);
+}
+
 function lista($banco){ // lista todos os usuarios
 	global $app;
     $sth=$banco->prepare("SELECT * FROM usuario");
