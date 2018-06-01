@@ -184,8 +184,12 @@ function atualizaUser($dados){
     global $app;   
 	$dados = (sizeof($dados)==0)? $_POST : $dados;	
     $banco = Conexao();    
-    $sth=$banco->prepare("UPDATE usuario SET nome=:nome WHERE id_usuario=:id_usuario");
+    $sth=$banco->prepare("UPDATE usuario SET nome=:nome,data_nascimento=:data_nascimento,sexo=:sexo,telefone=:telefone,dddtelefone=:dddtelefone WHERE id_usuario=:id_usuario");
     $sth->bindValue(':nome',$dados->nome);
+    $sth->bindValue(':sexo',$dados->sexo);
+    $sth->bindValue(':data_nascimento',$dados->data_nascimento);
+    $sth->bindValue(':telefone',$dados->telefone);
+    $sth->bindValue(':dddtelefone',$dados->dddtelefone);  
     $sth->bindValue(':id_usuario',$dados->id_usuario);    
     $sth->execute();
     
