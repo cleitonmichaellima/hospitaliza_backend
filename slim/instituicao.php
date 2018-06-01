@@ -7,6 +7,7 @@ require 'vendor/autoload.php';
 $app = new \Slim\App(array(
     'templates.path' => 'templates'
 ));
+
 function Conexao(){
    return  new \PDO('mysql:host=jlg7sfncbhyvga14.cbetxkdyhwsb.us-east-1.rds.amazonaws.com;dbname=h9w81k8dpa80jk2o', 'werqx8ism2m6wgx2', 'u9alw9axiniilu2q');
 }
