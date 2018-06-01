@@ -1,6 +1,8 @@
 <?php
+
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
+
 
 require 'vendor/autoload.php';
 
@@ -46,11 +48,10 @@ $app->get('/usuarioVerificaEmail/{email}', function (Request $request, Response 
    // return $response;
 });
 
-$app->get('/login/', function (Request $request, Response $response) {
+$app->post('/login/', function (Request $request, Response $response) {
 
    $banco = Conexao();
-   $dados = json_decode($request->getAttribute('login'));
-   print_r($dados);
+   $dados = json_decode($request->getBody());   
    authUser($dados);
 });
 
@@ -115,16 +116,39 @@ function novo($dados){ // isercao de novo usuario
 }
 
 function authUser($dados){
-    global $app;   
+    global $app;    
 	$dados = (sizeof($dados)==0)? $_POST : $dados;	
-    $banco = Conexao();    
-    $sth=$banco->prepare("SELECT * FROM usuario WHERE email=:email AND senha=:senha");
-    $sth->bindValue(':id',$dados['email']);
-    $sth->bindValue(':senha',$dados['senha']);
-    $result = $sth->fetch(\PDO::FETCH_ASSOC);
-    echo json_encode($result);
-    $sth->execute();
+    $banco = Conexao(); 
     
+    $sth=$banco->prepare("SELECT * FROM usuario WHERE email=:email AND senha=:senha");
+    $sth->bindValue(':email',$dados->email);
+    $sth->bindValue(':senha',$dados->senha);
+    $sth->execute();
+    $result = $sth->fetch(\PDO::FETCH_ASSOC);     
+    
+    
+    if($sth->rowCount()>0){ // sucesso, encontrou usuario
+        
+        $response['status'] = 1;
+        
+        if($_SESSION['pass_user']){
+          $response['msg'] = "usuário já logado";
+         
+        }
+        else{    
+            require "session.php";
+            $response['msg'] = "login efetuado com sucesso";
+            $_SESSION['id_usuario'] = $result['id_usuario'];  
+            $response['id_usuario'] = $result['id_usuario']; 
+            $response['pass_user'] = $_SESSION['pass_user']; 
+           
+        }
+        
+    }
+    else{
+        $response['status'] = 0;
+    }
+    echo json_encode($response);
 }
 
 function atualizaUser($dados){
