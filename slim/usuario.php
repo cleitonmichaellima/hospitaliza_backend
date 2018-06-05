@@ -83,6 +83,13 @@ $app->post('/usuario/', function (Request $request, Response $response) {
 	
 });
 
+//novo contato
+$app->post('/contato/', function (Request $request, Response $response) {    
+    $dados = json_decode($request->getBody());
+    novoContato($dados);
+	
+});
+
 
 function listaAvaliacoesUsuario($banco,$id){
   global $app;
@@ -141,6 +148,32 @@ function novo($dados){ // isercao de novo usuario
 	//Retorna o id inserido
     if($sth->execute()){
          $response['id_usuario'] = $banco->lastInsertId();
+         $response['status'] = 1;
+    }
+    else{
+        
+        $response['status'] =0;
+    }
+   
+    
+    echo json_encode($response );
+
+}
+
+function novoContato($dados){ // isercao de novo usuario
+	global $app;
+    $banco = Conexao();
+    $dados = get_object_vars($dados);
+	$dados = (sizeof($dados)==0)? $_POST : $dados;
+	$keys = array_keys($dados); //Paga as chaves do array
+	$sth = $banco->prepare("INSERT INTO contato (".implode(',', $keys).") VALUES (:".implode(",:", $keys).")");
+    
+	foreach ($dados as $key => $value) {
+		$sth ->bindValue(':'.$key,$value);
+	}
+    
+	//Retorna o id inserido
+    if($sth->execute()){        
          $response['status'] = 1;
     }
     else{
