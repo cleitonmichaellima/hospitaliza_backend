@@ -73,7 +73,7 @@ $app->post('/login/', function (Request $request, Response $response) {
 //nova pessoa
 $app->post('/usuario/', function (Request $request, Response $response) {    
     $dados = json_decode($request->getBody());
-    print_r($dados);
+   
     if($dados->id_usuario!=''){
        atualizaUser($dados);
     }
@@ -138,9 +138,18 @@ function novo($dados){ // isercao de novo usuario
 		$sth ->bindValue(':'.$key,$value);
 	}
     
-	$sth->execute();
 	//Retorna o id inserido
-    echo json_encode( $banco->lastInsertId());
+    if($sth->execute()){
+         $response['id_usuario'] = $banco->lastInsertId();
+         $response['status'] = 1;
+    }
+    else{
+        
+        $response['status'] =0;
+    }
+   
+    
+    echo json_encode($response );
 
 }
 
@@ -167,8 +176,8 @@ function authUser($dados){
         else{    
             require "session.php";
             $response['msg'] = "login efetuado com sucesso";
-            $_SESSION['id_usuario'] = $result['id_usuario'];  
-            $response['id_usuario'] = $result['id_usuario']; 
+            $response['id_usuario'] = $result['id_usuario'];  
+            $response['nomeUsuario'] = $result['nome']; 
             $response['pass_user'] = $_SESSION['pass_user']; 
            
         }
@@ -190,9 +199,15 @@ function atualizaUser($dados){
     $sth->bindValue(':data_nascimento',$dados->data_nascimento);
     $sth->bindValue(':telefone',$dados->telefone);
     $sth->bindValue(':dddtelefone',$dados->dddtelefone);  
-    $sth->bindValue(':id_usuario',$dados->id_usuario);    
+    $sth->bindValue(':id_usuario',$dados->id_usuario); 
     $sth->execute();
-    
+    if($sth->rowCount()>0){      
+         $response['status'] = 1;
+    }
+    else{        
+        $response['status'] =0;
+    }
+    echo json_encode($response);
 }
 /*
 function alterar($dados){
