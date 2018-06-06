@@ -31,6 +31,22 @@ $app->get('/instituicao/{id}', function (Request $request, Response $response) {
    // return $response;
 });
 
+$app->get('/ranking/{idRanking}', function (Request $request, Response $response) {
+
+   $banco = Conexao();
+   $idRanking = $request->getAttribute('idRanking');
+   if($idRanking){
+      listaRanking($banco,$idRanking);
+   }
+   else{
+       echo "Codigo de Ranking ";
+   }
+   // return $response;
+});
+
+
+
+
 $app->get('/variaveisInstituicao/{id}', function (Request $request, Response $response) {
 
    $banco = Conexao();
@@ -146,6 +162,42 @@ function listaAvaliacoesInstituicao($banco,$id){
   $result = $sth->fetchAll(\PDO::FETCH_ASSOC);
   echo json_encode($result);
 }
+
+function listaRanking($banco,$idRanking){
+  global $app;
+    
+  if($idRanking==1){ //  melhores avaliados
+      $sth=$banco->prepare("SELECT  round(sum(n.nota)/count(*)) as mediaNota,i.id_instituicao,i.nome FROM instituicao i 
+                            INNER JOIN avaliacao a ON a.id_instituicao = i.id_instituicao
+                            INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao
+                            GROUP BY i.id_instituicao
+                            ORDER BY  round(sum(n.nota)/count(*)) DESC
+                            LIMIT 4 ");
+  }
+    
+  if($idRanking==2){ //  piores avaliadores
+     $sth=$banco->prepare(" SELECT  round(sum(n.nota)/count(*)) as mediaNota,i.id_instituicao,i.nome FROM instituicao i 
+                            INNER JOIN avaliacao a ON a.id_instituicao = i.id_instituicao
+                            INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao
+                            GROUP BY i.id_instituicao
+                            ORDER BY  round(sum(n.nota)/count(*)) ASC
+                            LIMIT 4"); 
+  }
+  
+  if($idRanking==3){ //  mais indicados
+     $sth=$banco->prepare(" SELECT  sum(a.indicacao) as indicados,i.id_instituicao,i.nome FROM instituicao i 
+                            INNER JOIN avaliacao a ON a.id_instituicao = i.id_instituicao
+                            INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao
+                            GROUP BY i.id_instituicao
+                            ORDER BY  sum(a.indicacao) DESC
+                            LIMIT 4"); 
+  }  
+
+  $sth->execute();
+  $result = $sth->fetchAll(\PDO::FETCH_ASSOC);
+  echo json_encode($result);
+}
+
 
 
 function listaVariaveisInstituicao($banco,$id){
