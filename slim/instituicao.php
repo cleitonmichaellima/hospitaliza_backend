@@ -133,7 +133,7 @@ function listaUnico($banco,$id){
 
 function pesquisaPorTermoDeBusca($banco,$termo){
   global $app;  
-  $sth = $banco->prepare("  SELECT a.id_avaliacao,a.titulo,a.descricao,n.nota,a.`data`,i.nome,i.id_instituicao 
+  $sth = $banco->prepare("  SELECT a.id_avaliacao,a.titulo,a.descricao,n.nota,a.`data`,i.nome,i.id_instituicao,a.indicacao 
                             FROM avaliacao a
                             INNER JOIN instituicao i ON i.id_instituicao = a.id_instituicao
                             INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao
