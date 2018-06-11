@@ -113,28 +113,54 @@ $app->post('/alterarSenhaDoLembrar/', function (Request $request, Response $resp
 });
 
 
+//desativar contato
+$app->post('/verificaChaveSenha/', function (Request $request, Response $response) {    
+    $dados = json_decode($request->getBody());
+    verificaChaveSenha($dados);
+	
+});
 
+
+
+function verificaChaveSenha($dados){ //  alterar a senha de fora do portal 
+    global $app;    
+	$dados = (sizeof($dados)==0)? $_POST : $dados;	
+    $banco = Conexao(); 
+    $dataVencimento =  new DateTime();  
+    $dataEUA =  $dataVencimento->format('Y-m-d H:m:s');        
+    $sth=$banco->prepare("SELECT id_usuario FROM usuario_lembrar_senha WHERE chave_unica=:chave_unica AND data_vencimento > :data_vencimento");
+    $sth->bindValue(':chave_unica',$dados->chave_unica);
+    $sth->bindValue(':data_vencimento',$dataEUA);
+    $sth->execute();
+    if($sth->rowCount()>0){ // sucesso, encontrou usuario        
+        $response = $sth->fetch(\PDO::FETCH_ASSOC);    
+        $response['status'] =1;
+    }
+    else{
+        $response['status'] =0; 
+    }
+    
+    
+    echo json_encode($response);
+}
+
+    
 function alterarSenhaDoLembrar($dados){ //  alterar a senha de fora do portal 
     global $app;    
 	$dados = (sizeof($dados)==0)? $_POST : $dados;	
     $banco = Conexao(); 
-    
-    $sth=$banco->prepare("SELECT id_usuario FROM usuario_lembrar_senha WHERE chave_unica=:chave_unica");
-    $sth->bindValue(':chave_unica',$dados->chave_unica);
+       
+    $sth=$banco->prepare("UPDATE usuario SET senha = :senha  WHERE id_usuario=:id_usuario");
+    $sth->bindValue(':id_usuario',$dados->id_usuario);  
+    $sth->bindValue(':senha',$dados->senha); 
     $sth->execute();
-    $result = $sth->fetch(\PDO::FETCH_ASSOC);     
-    
-    
-    if($sth->rowCount()>0){ // sucesso, encontrou usuario
-        $sth=$banco->prepare("UPDATE usuario SET senha =:senha  WHERE id_usuario=:id_usuario");
-        $sth->bindValue(':id_usuario',$result->id_usuario);  
-        $sth->bindValue(':senha',$dados->senha); 
-        $sth->execute();
-        $response['status'] = 1;
+    if($sth->rowCount()>0){      
+         $response['status'] = 1;
     }
-    else{
-        $response['status'] = 0;
+    else{        
+        $response['status'] =0;
     }
+    
     echo json_encode($response);
 }
 
@@ -178,7 +204,53 @@ function lembrarSenha($dados){
         $sth->bindValue(':data_vencimento',$dataEUA);
         if($sth->execute()){
             
-            $response['status'] = 1;
+            $message = "
+                        <head>
+                          <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro' rel='stylesheet'> 
+                          <style>
+                            body{
+                                    font-family: 'Source Sans Pro', sans-serif;
+                                }
+
+                          </style>
+                        </head>
+                        <table style='width:500px;margin:auto;'>
+                          <tr>
+                            <td>
+                              <center>
+                                <img src='http://hospitaliza.cleitonlima.com.br/img/logo_hospitaliza.png' style='width:60%'>
+                              </center>
+                            </td>
+                            <tr>
+                              <td style='text-align:justify;'>        
+                                Olá, recebemos o seu pedido para recuperar a senha.<br>
+                                Será necessário criar uma senha nova para o seu acesso, para isso clique no link abaixo:
+                                <br>
+                                <a href='http://hospitaliza.cleitonlima.com.br/#!/lembrarSenha/".$chaveUnica."'>http://hospitaliza.cleitonlima.com.br/#!/lembrarSenha/".$chaveUnica."</a>
+                                <br>
+                                <center>
+                                  <h5> Obrigado pelo contato</h5>
+                                </center>
+                              </td>
+                          </tr>
+
+
+                        </table>";
+            
+            $headers  = 'MIME-Version: 1.0' . "\r\n";
+            $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+
+            // Additional headers
+            $headers .= 'To: Mary <'.$dados->email.', Usuario <'.$dados->email.'>' . "\r\n";
+            $headers .= 'From: HOSPITALIZA SUPORTE <contato@cleitonlima.com.br>' . "\r\n";         
+            // Mail it
+            if(mail($dados->email, 'Lembrar senha - HOSPITALIZA', $message, $headers)){
+                $response['status'] = 1;
+            }
+            else{
+               $response['status'] = 0; 
+            }
+            
         }
         else{
             $sth->debugDumpParams();
