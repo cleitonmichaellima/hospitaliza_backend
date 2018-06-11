@@ -90,6 +90,118 @@ $app->post('/contato/', function (Request $request, Response $response) {
 	
 });
 
+//desativar contato
+$app->post('/desativarUsuario/', function (Request $request, Response $response) {    
+    $dados = json_decode($request->getBody());
+    desativarUsuario($dados);
+	
+});
+
+//desativar contato
+$app->post('/lembrarSenha/', function (Request $request, Response $response) {    
+    $dados = json_decode($request->getBody());
+    lembrarSenha($dados);
+	
+});
+
+
+//desativar contato
+$app->post('/alterarSenhaDoLembrar/', function (Request $request, Response $response) {    
+    $dados = json_decode($request->getBody());
+    alterarSenhaDoLembrar($dados);
+	
+});
+
+
+
+function alterarSenhaDoLembrar($dados){ //  alterar a senha de fora do portal 
+    global $app;    
+	$dados = (sizeof($dados)==0)? $_POST : $dados;	
+    $banco = Conexao(); 
+    
+    $sth=$banco->prepare("SELECT id_usuario FROM usuario_lembrar_senha WHERE chave_unica=:chave_unica");
+    $sth->bindValue(':chave_unica',$dados->chave_unica);
+    $sth->execute();
+    $result = $sth->fetch(\PDO::FETCH_ASSOC);     
+    
+    
+    if($sth->rowCount()>0){ // sucesso, encontrou usuario
+        $sth=$banco->prepare("UPDATE usuario SET senha =:senha  WHERE id_usuario=:id_usuario");
+        $sth->bindValue(':id_usuario',$result->id_usuario);  
+        $sth->bindValue(':senha',$dados->senha); 
+        $sth->execute();
+        $response['status'] = 1;
+    }
+    else{
+        $response['status'] = 0;
+    }
+    echo json_encode($response);
+}
+
+function alterarSenha($dados){ // alterar a senha dentro do portal 
+    global $app;    
+	$dados = (sizeof($dados)==0)? $_POST : $dados;	
+    $banco = Conexao();     
+    $sth=$banco->prepare("UPDATE usuario SET senha =:senha  WHERE id_usuario=:id_usuario");
+    $sth->bindValue(':id_usuario',$dados->id_usuario);  
+    $sth->bindValue(':senha',$dados->senha); 
+    $sth->execute();
+       
+   if($sth->rowCount()>0){      
+         $response['status'] = 1;
+    }
+    else{        
+        $response['status'] =0;
+    }
+    echo json_encode($response);
+}
+
+function lembrarSenha($dados){
+    global $app;    
+	$dados = (sizeof($dados)==0)? $_POST : $dados;	
+    $banco = Conexao(); 
+    
+    $sth=$banco->prepare("SELECT id_usuario FROM usuario WHERE email=:email");
+    $sth->bindValue(':email',$dados->email);
+    $sth->execute();
+    $result = $sth->fetch(\PDO::FETCH_ASSOC);     
+    
+    
+    if($sth->rowCount()>0){ // sucesso, encontrou usuario
+        $dataVencimento =  new Date();
+        $dataVencimento =  $dataVencimento-add('P1D');// adiciona o limite de 24hs para resetar a senha
+        $dataVencimento =  $dataVencimento->format('Y-m-d H:m:s');        
+        $chaveUnica = md5(uniqid()); // gera chave unica de acesso
+        $sth = $banco->prepare("INSERT INTO usuario_lembrar_senha (id_usuario,chave_unica,data_vencimento) VALUES (:id_usuario,:chave_unica,:data_vencimento)");
+        $sth->bindValue(':id_usuario',$result->id_usuario);
+        $sth->bindValue(':chave_unica',$chaveUnica);
+        $sth->bindValue(':data_vencimento',$dataVencimento);
+        $sth->execute();
+        $response['status'] = 1;
+    }
+    else{
+        $response['status'] = 0;
+    }
+    echo json_encode($response);
+}
+
+
+function desativarUsuario($dados){
+    global $app;   
+	$dados = (sizeof($dados)==0)? $_POST : $dados;	
+    $banco = Conexao();    
+    $sth=$banco->prepare("UPDATE usuario SET inativado =:inativado  WHERE id_usuario=:id_usuario");
+    $sth->bindValue(':inativado',1);  
+    $sth->bindValue(':id_usuario',$dados->id_usuario); 
+    $sth->execute();
+    if($sth->rowCount()>0){      
+         $response['status'] = 1;
+    }
+    else{        
+        $response['status'] =0;
+    }
+    echo json_encode($response);
+}
 
 function listaAvaliacoesUsuario($banco,$id){
   global $app;
@@ -105,6 +217,8 @@ function listaAvaliacoesUsuario($banco,$id){
   $result = $sth->fetchAll(\PDO::FETCH_ASSOC);
   echo json_encode($result);
 }
+
+
 
 function lista($banco){ // lista todos os usuarios
 	global $app;
