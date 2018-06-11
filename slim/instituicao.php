@@ -9,7 +9,7 @@ $app = new \Slim\App(array(
 ));
 
 function Conexao(){
-   return  new \PDO('mysql:host=jlg7sfncbhyvga14.cbetxkdyhwsb.us-east-1.rds.amazonaws.com;dbname=h9w81k8dpa80jk2o', 'werqx8ism2m6wgx2', 'u9alw9axiniilu2q');
+   return  new \PDO('mysql:host=jlg7sfncbhyvga14.cbetxkdyhwsb.us-east-1.rds.amazonaws.com;dbname=h9w81k8dpa80jk2o', 'werqx8ism2m6wgx2', 'u9alw9axiniilu2q', array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
 }
 
 $app->get('/instituicao/', function (Request $request, Response $response) {
@@ -156,7 +156,9 @@ function pesquisaPorTermoDeBusca($banco,$termo){
 
 function listaAvaliacoesInstituicao($banco,$id){
   global $app;
-  $sth=$banco->prepare("SELECT * FROM avaliacao WHERE id_instituicao=:id");
+  $sth=$banco->prepare("SELECT a.id_avaliacao,a.titulo,a.descricao,n.nota,a.`data`,a.indicacao  FROM avaliacao a
+                        INNER JOIN nota n ON n.id_avaliacao = a.id_avaliacao                        
+                        WHERE a.id_instituicao=:id");
   $sth->bindValue(':id',$id);
   $sth->execute();
   $result = $sth->fetchAll(\PDO::FETCH_ASSOC);
