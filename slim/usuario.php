@@ -168,16 +168,23 @@ function lembrarSenha($dados){
     
     
     if($sth->rowCount()>0){ // sucesso, encontrou usuario
-        $dataVencimento =  new Date();
-        $dataVencimento =  $dataVencimento-add('P1D');// adiciona o limite de 24hs para resetar a senha
-        $dataVencimento =  $dataVencimento->format('Y-m-d H:m:s');        
+        $dataVencimento =  new DateTime();
+        $dataVencimento =  $dataVencimento->add(new DateInterval('P1D'));// adiciona o limite de 24hs para resetar a senha
+        $dataEUA =  $dataVencimento->format('Y-m-d H:m:s');        
         $chaveUnica = md5(uniqid()); // gera chave unica de acesso
         $sth = $banco->prepare("INSERT INTO usuario_lembrar_senha (id_usuario,chave_unica,data_vencimento) VALUES (:id_usuario,:chave_unica,:data_vencimento)");
-        $sth->bindValue(':id_usuario',$result->id_usuario);
+        $sth->bindValue(':id_usuario',$result['id_usuario']);
         $sth->bindValue(':chave_unica',$chaveUnica);
-        $sth->bindValue(':data_vencimento',$dataVencimento);
-        $sth->execute();
-        $response['status'] = 1;
+        $sth->bindValue(':data_vencimento',$dataEUA);
+        if($sth->execute()){
+            
+            $response['status'] = 1;
+        }
+        else{
+            $sth->debugDumpParams();
+             $response['status'] = 0;
+        }
+        
     }
     else{
         $response['status'] = 0;
