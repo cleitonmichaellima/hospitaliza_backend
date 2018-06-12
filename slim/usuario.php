@@ -269,8 +269,8 @@ function desativarUsuario($dados){
     global $app;   
 	$dados = (sizeof($dados)==0)? $_POST : $dados;	
     $banco = Conexao();    
-    $sth=$banco->prepare("UPDATE usuario SET inativado =:inativado  WHERE id_usuario=:id_usuario");
-    $sth->bindValue(':inativado',1);  
+    $sth=$banco->prepare("UPDATE usuario SET inativado =:motivo  WHERE id_usuario=:id_usuario");
+    $sth->bindValue(':motivo',$dados->motivo);  
     $sth->bindValue(':id_usuario',$dados->id_usuario); 
     $sth->execute();
     if($sth->rowCount()>0){      
@@ -404,6 +404,7 @@ function authUser($dados){
             $response['msg'] = "login efetuado com sucesso";
             $response['id_usuario'] = $result['id_usuario'];  
             $response['nomeUsuario'] = $result['nome']; 
+            $response['inativado'] = $result['inativado']; 
             $response['pass_user'] = $_SESSION['pass_user']; 
            
         }
